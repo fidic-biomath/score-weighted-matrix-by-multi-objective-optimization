@@ -1,0 +1,7 @@
+results/*
+**/*__pycache__/*
+*.env
+env_vars*
+credentials*
+**/build/*
+**.ipynb_checkpoints
