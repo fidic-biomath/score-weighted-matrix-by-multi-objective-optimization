@@ -1,25 +1,14 @@
-#from __future__ import absolute_import, division, print_function, unicode_literals
 import array
 import random
 import json
-# import operator  #  el objeto HallOfFame recibe un argumento llamdo "similar" que por defecto usa el metodo "operator.eq" de este modulo
 import numpy as np
-#import ctypes
 from math import sqrt
 
-#import networkx as nx
-#import matplotlib.pyplot as plt
-#from matplotlib.pyplot import show
-
 from deap import base
-#from deap import benchmarks
 from deap import creator
 from deap import tools
 from deap import algorithms
-#from deap.benchmarks.tools import diversity, convergence, hypervolume
 
-#from scipy.stats import pearsonr
-#import os
 import sys
 
 import corr1 # 
@@ -28,17 +17,13 @@ import corr3 #
 
 sys.setrecursionlimit(100000) # ???
 
-#global pcc_d      #
-#global cont_pcc   #
-#global cont_unif  #
 global array_r    #
-global train_char #
-#global num_scores #
+global data_peptide_core_chars #
 global index_n    #
 global label      #
 global hasha      #
 global exp_scores #
-global count_size #  Number of peptides for training  PCC and AUC
+global dataset_size #  Number of peptides for training  PCC and AUC
 
 ###########################
 # Se crean los objetos para definir el problema y el tipo de indiviuos
@@ -78,17 +63,19 @@ def corr_pcc(individual):
     # inputs:
     #   np.array(individual):
     #   label:
-    #   train_char:
+    #   data_peptide_core_chars:
     #   hasha:
     #   array_r:
     #   exp_scores:
     #   index_n:
-    #   count_size:
+    #   dataset_size:
     #
     # outputs:
     #   pcc:
     #   auc:
-    pcc, auc = corr1.corr_nsga2(np.array(individual), label, train_char, hasha, array_r, exp_scores, index_n, count_size)
+    pcc, auc = corr1.corr_nsga2(np.array(individual), label, data_peptide_core_chars, hasha, array_r, exp_scores, index_n, dataset_size)
+    #pcc = np.person
+    #auc = np.roc.auc
     return pcc, auc
 
 # Registro de operadores geneticos y funcion objetivo
@@ -103,6 +90,23 @@ toolbox.register("mutate", tools.mutPolynomialBounded, low=BOUND_LOW, up=BOUND_U
 toolbox.register("select", tools.selNSGA2)
 # fitness
 toolbox.register("evaluate", corr_pcc)
+
+#######################################################################
+# Funciones extras antes de la funcion main()
+
+def plot_frente():
+    """
+    Representación del frente de Pareto que hemos obtenido
+    """
+    datos_pareto = np.loadtxt("fitness.log", delimiter=",")
+    plt.scatter(datos_pareto[:, 0], datos_pareto[:, 1], s=30)
+
+    plt.xlabel("PCC")
+    plt.ylabel("AUC")
+    plt.grid(True)
+    plt.legend(["Pareto obtenido"], loc="upper right")
+    #plt.savefig("ParetoBenchmark.eps", dpi=300, bbox_inches="tight")
+    plt.show()
 
 # Ejecucion del algoritmo multiobjetivo
 # inputs:
@@ -147,7 +151,6 @@ def main(NGEN, MU, seed):
     # tiene metodos, y dos importantes son: "record" y "select"    
     logbook = tools.Logbook()
 
-
     # Este objeto ....
     pareto = tools.ParetoFront()
 
@@ -181,73 +184,6 @@ def main(NGEN, MU, seed):
                                              halloffame=pareto,
                                              verbose=True,
                                              )
-
-#    history = tools.History()##********************
-#    toolbox.decorate("mate", history.decorator)##********************
-#    toolbox.decorate("mutate", history.decorator)##********************
-#
-#    # Evaluate the individuals with an invalid fitness
-#    invalid_ind = [ind for ind in pop if not ind.fitness.valid]
-#    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
-#
-#    for ind, fit in zip(invalid_ind, fitnesses):
-#        ind.fitness.values = fit
-#
-#    # This is just to assign the crowding distance to the individuals
-#    # no actual selection is done
-#    pop = toolbox.select(pop, len(pop))
-#
-#    record = stats.compile(pop)
-#    logbook.record(gen=0, evals=len(invalid_ind), **record)
-#    print(logbook.stream)
-#
-#    print("      ")
-#    print(" Individuals in generation 0: ")
-#    print("      ")
-#    j=0
-#    for i in pop:
-#        j+=1
-#        print(j, ":", i, "PCC, AUC=", i.fitness)
-#    print("      ")
-#
-#    # Begin the generational process
-#    for gen in range(1, NGEN):
-#          # Vary the population
-#        offspring = tools.selTournamentDCD(pop, len(pop))
-#        offspring = [toolbox.clone(ind) for ind in offspring]
-#
-#        for ind1, ind2 in zip(offspring[::2], offspring[1::2]):
-#            if random.random() <= CXPB:
-#                toolbox.mate(ind1, ind2)
-#
-#            toolbox.mutate(ind1)
-#            toolbox.mutate(ind2)
-#            del ind1.fitness.values, ind2.fitness.values
-#
-#        # Evaluate the individuals with an invalid fitness
-#        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-#        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
-#        for ind, fit in zip(invalid_ind, fitnesses):
-#              ind.fitness.values = fit
-#
-#        # Select the next generation population
-#        pop = toolbox.select(pop + offspring, MU)
-#        record = stats.compile(pop)
-#        logbook.record(gen=gen, evals=len(invalid_ind), **record)
-#        print(logbook.stream)
-#
-#        hof.update(pop)##********************
-#
-#        print("      ")
-#        print(" Individuals in generation",gen,": ")
-#        print("      ")
-#        j=0
-#        for i in pop:
-#            j+=1
-#            print(j, ":", i, "PCC, AUC=", i.fitness)
-#        print("      ")
-#
-#    return pop, logbook, history, hof
     return pop, logbook, pareto
 
 if __name__ == "__main__":
@@ -257,22 +193,13 @@ if __name__ == "__main__":
     num_generations=int(sys.argv[1])
     num_individuals=int(sys.argv[2])
     random_seed=int(sys.argv[3])
-
-    train_txt = 'train1_DRB1_0101_e.txt'
-    matrix_txt = 'matrix_DR1_label.txt'
-    #cont_pcc = 0
-    #cont_unif = 0
-    if len(sys.argv)==5:
-        train_txt = sys.argv[4]
-
-    if len(sys.argv)==6:
-        train_txt = sys.argv[4]
-        matrix_txt = sys.argv[5]
+    data_peptides = sys.argv[4]
+    score_matrix = sys.argv[5]
 
     # PEPTIDE FILE SIZE
-    count_size = len(open(train_txt).readlines())
+    dataset_size = len(open(data_peptides).readlines())
     print("*")
-    print("*Number of peptides (data to train): ", count_size)
+    print("*Number of peptides (data to train): ", dataset_size)
     print("*")
     print("************Genetic Algorithm************")
     print("************Binding Predictor************")
@@ -287,64 +214,60 @@ if __name__ == "__main__":
     # CORR2 
     # ??????
     # inputs:
-    #   count_size:
-    #   train_txt:
-    #   matrix_txt:
+    #   dataset_size:
+    #   data_peptides:
+    #   score_matrix:
     #
     # outputs:
-    #  array_r:
-    #   label:
-    #   index_n:
-    array_r, label, index_n = corr2.store_nsga2(count_size, train_txt, matrix_txt)
+    #  array_r <class 'numpy.ndarray'>:  score_matrix
+    #   label <class 'bytes'>:   columns labels of array_r
+    #   index_n <class 'int'>:  number of 9-mer possible peptides
+    array_r, label, index_n = corr2.store_nsga2(dataset_size, data_peptides, score_matrix)
+    print( array_r )
+    print( label )
+    print( index_n )
 
-    train_char = np.array((index_n,9), dtype='U')
+
+    data_peptide_core_chars = np.array((index_n,9), dtype='U')
     hasha = np.array((index_n), dtype='U')
-    exp_scores = np.zeros((count_size), dtype='f')
+    exp_scores = np.zeros((dataset_size), dtype='f')
 
     # CORR3
-    train_char, hasha, exp_scores = corr3.store_nsga2(count_size, index_n, train_txt, matrix_txt)
+    # ??????
+    # inputs:
+    #   dataset_size:
+    #   index_n:
+    #   data_peptides: 
+    #   score_matrix:
+    # outputs:
+    #   data_peptide_core_chars <class 'numpy.ndarray'>:  9-mer possible peptides by chars
+    #   hasha <class 'numpy.ndarray'>:  ????
+    #   exp_scores <class 'numpy.ndarray'>:  experimental peptide binding scores 
+    data_peptide_core_chars, hasha, exp_scores = corr3.store_nsga2(dataset_size, index_n, data_peptides, score_matrix)
+    np.set_printoptions(threshold=sys.maxsize)
+    print( type(data_peptide_core_chars) )
+    print( data_peptide_core_chars.shape )
+    print( data_peptide_core_chars )
+    print( type(hasha) )
+    print( hasha.shape )
+    print( hasha )
+    print( type(exp_scores) )
+    print( exp_scores.shape )
+    print( exp_scores )
+
 
 #########################################################################
-#    pop, stats, history, hof = main(num_generations, num_individuals, random_seed)
     pop, log, pareto = main(num_generations, num_individuals, random_seed)
 #########################################################################
-    #print("Resume")
-    #print(stats)
-    #print("--------")
+    res_individuals = open("individuals.log", "w")
+    res_fitness = open("fitness.log", "w")
+    for ind in pareto:
+        res_individuals.write(str(ind))
+        res_individuals.write("\n")
+        res_fitness.write(str(ind.fitness.values[0]))
+        res_fitness.write(",")
+        res_fitness.write(str(ind.fitness.values[1]))
+        res_fitness.write("\n")
+    res_individuals.close()
+    res_fitness.close()
 
-
-    #print(toolbox.individual())
-    #print(toolbox.individual())
-    #print("Convergence: ", convergence(pop, optimal_front))
-    #print("Diversity: ", diversity(pop, optimal_front[0], optimal_front[-1]))
-
-    # import matplotlib.pyplot as plt
-    # import numpy
-
-    #from matplotlib.pyplot import imshow, show##********************
-    #*************************
-    #gen_best = history.getGenealogy(hof[0])##********************
-    #print(gen_best)
-    #print(hof[0])
-    #graph = nx.DiGraph(gen_best).reverse()##********************networkx
-    #nx.draw(graph)
-    #show()
-    #*************************
-
-    #pos = nx.spring_layout(graph)
-
-    #nx.draw_networkx_nodes(graph, pos, cmap=plt.get_cmap('jet'), node_size = 500)
-                        #node_color = values, node_size = 500)
-    #nx.draw_networkx_labels(graph, pos)
-    #nx.draw_networkx_edges(graph, pos, edgelist=red_edges, edge_color='r', arrows=True)
-    #nx.draw_networkx_edges(graph, pos, edgelist=black_edges, arrows=False)
-    #nx.draw(graph)##********************
-    #imshow(stats.avg[0], origin="lower")##********************
-    #show()##********************
-
-    #front = np.array([ind.fitness.values for ind in pop])
-    #optimal_front = np.array(optimal_front)
-    #plt.scatter(optimal_front[:,0], optimal_front[:,1], c="r")
-    #plt.scatter(front[:,0], front[:,1], c="b")
-    #plt.axis("tight")
-    #plt.show()
