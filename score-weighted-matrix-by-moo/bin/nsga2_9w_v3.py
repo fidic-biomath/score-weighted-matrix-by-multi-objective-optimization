@@ -17,13 +17,16 @@ import corr3 #
 
 sys.setrecursionlimit(100000) # ???
 
-global array_r    #
-global data_peptide_core_chars #
-global index_n    #
 global label      #
+global data_peptide_core_chars #
 global hasha      #
-global exp_scores #
+global array_r    #
+global index_n    #
 global dataset_size #  Number of peptides for training  PCC and AUC
+global exp_scores #
+global pred_scores #
+global auc #
+global pcc #
 
 ###########################
 # Se crean los objetos para definir el problema y el tipo de indiviuos
@@ -73,7 +76,7 @@ def corr_pcc(individual):
     # outputs:
     #   pcc:
     #   auc:
-    pcc, auc = corr1.corr_nsga2(np.array(individual), label, data_peptide_core_chars, hasha, array_r, exp_scores, index_n, dataset_size)
+    pcc, auc, pred_scores = corr1.corr_nsga2(np.array(individual), label, data_peptide_core_chars, hasha, array_r, exp_scores, index_n, dataset_size)
     #pcc = np.person
     #auc = np.roc.auc
     return pcc, auc
@@ -92,22 +95,6 @@ toolbox.register("select", tools.selNSGA2)
 toolbox.register("evaluate", corr_pcc)
 
 #######################################################################
-# Funciones extras antes de la funcion main()
-
-def plot_frente():
-    """
-    Representación del frente de Pareto que hemos obtenido
-    """
-    datos_pareto = np.loadtxt("fitness.log", delimiter=",")
-    plt.scatter(datos_pareto[:, 0], datos_pareto[:, 1], s=30)
-
-    plt.xlabel("PCC")
-    plt.ylabel("AUC")
-    plt.grid(True)
-    plt.legend(["Pareto obtenido"], loc="upper right")
-    #plt.savefig("ParetoBenchmark.eps", dpi=300, bbox_inches="tight")
-    plt.show()
-
 # Ejecucion del algoritmo multiobjetivo
 # inputs:
 #   NGEN: num_generations
@@ -202,8 +189,6 @@ if __name__ == "__main__":
     print("*Number of peptides (data to train): ", dataset_size)
     print("*")
     print("************Genetic Algorithm************")
-    print("************Binding Predictor************")
-    print("*")
     print("*Number of Generations: ", num_generations)
     print("*Number of Individuals: ", num_individuals)
     print("*Random seed: ", random_seed)
@@ -223,10 +208,9 @@ if __name__ == "__main__":
     #   label <class 'bytes'>:   columns labels of array_r
     #   index_n <class 'int'>:  number of 9-mer possible peptides
     array_r, label, index_n = corr2.store_nsga2(dataset_size, data_peptides, score_matrix)
-    print( array_r )
-    print( label )
-    print( index_n )
-
+    #print( array_r )
+    #print( label )
+    #print( index_n )
 
     data_peptide_core_chars = np.array((index_n,9), dtype='U')
     hasha = np.array((index_n), dtype='U')
@@ -244,17 +228,16 @@ if __name__ == "__main__":
     #   hasha <class 'numpy.ndarray'>:  ????
     #   exp_scores <class 'numpy.ndarray'>:  experimental peptide binding scores 
     data_peptide_core_chars, hasha, exp_scores = corr3.store_nsga2(dataset_size, index_n, data_peptides, score_matrix)
-    np.set_printoptions(threshold=sys.maxsize)
-    print( type(data_peptide_core_chars) )
-    print( data_peptide_core_chars.shape )
-    print( data_peptide_core_chars )
-    print( type(hasha) )
-    print( hasha.shape )
-    print( hasha )
-    print( type(exp_scores) )
-    print( exp_scores.shape )
-    print( exp_scores )
-
+    #np.set_printoptions(threshold=sys.maxsize)
+    #print( type(data_peptide_core_chars) )
+    #print( data_peptide_core_chars.shape )
+    #print( data_peptide_core_chars )
+    #print( type(hasha) )
+    #print( hasha.shape )
+    #print( hasha )
+    #print( type(exp_scores) )
+    #print( exp_scores.shape )
+    #print( exp_scores )
 
 #########################################################################
     pop, log, pareto = main(num_generations, num_individuals, random_seed)

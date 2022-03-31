@@ -1,19 +1,15 @@
 import corr1
 import corr2
 import corr3
-import pdb
+#import pdb
 import sys
 import numpy as np
 import pandas as pd
-#import matplotlib
+import matplotlib
 from sklearn.metrics import roc_curve, accuracy_score, roc_auc_score
-#import matplotlib
-#matplotlib.use('Qt5Agg')
-#import  matplotlib.pyplot as plt
-
-#import corr1 # 
-#import corr2 #
-#import corr3 #
+import matplotlib
+matplotlib.use('Qt5Agg')
+import  matplotlib.pyplot as plt
 
 global auc
 global pcc
@@ -98,6 +94,7 @@ def main():
     #   pcc:
     #   auc: 
     #
+    # Debugging
     #pdb.set_trace()
     pcc, auc, pred_scores = corr1.corr_nsga2(individual, label, data_peptide_core_chars, hasha, array_r, exp_scores, index_n, dataset_size)
     #print( type(pred_scores) )
@@ -105,36 +102,29 @@ def main():
     #print( pred_scores )
     print("PCC_value: %f" % pcc)
     print("AUC_value: %f" % auc)
-    #print("Retornando de main()....")
-#    score_matrix = pd.read_csv(score_matrix_filename, delim_whitespace=True)
-#    print(score_matrix)
-#    data_peptides = pd.read_csv(data_peptides_filename, delim_whitespace=True, header=None)
-#    print(data_peptides)
+    #score_matrix = pd.read_csv(score_matrix_filename, delim_whitespace=True)
+    #print(score_matrix)
+    #data_peptides = pd.read_csv(data_peptides_filename, delim_whitespace=True, header=None)
+    #print(data_peptides)
+
+    ###################################################
     my_array = np.array([exp_scores,pred_scores])
     #print(my_array.T)
     df = pd.DataFrame(my_array.T, columns=['exp_scores', 'pred_scores'])
-#    print(df)
-#    where the first column gives the peptide, the second column the log50k transformed binding affinity (i.e. 1 - log50k( aff nM)), and the last column the class II allele. When classifying the peptides into binders and non-binders for calculation of the AUC values for instance, a threshold of 500 nM is used. This means that peptides with log50k transformed binding affinity values greater than 0.426 are classified as binders. Source: https://services.healthtech.dtu.dk/service.php?NetMHCIIpan-3.2  (march 24th 2022)
+
+    #..."where the first column gives the peptide, the second column the log50k transformed binding affinity (i.e. 1 - log50k( aff nM)), and the last column the class II allele. When classifying the peptides into binders and non-binders for calculation of the AUC values for instance, a threshold of 500 nM is used. This means that peptides with log50k transformed binding affinity values greater than 0.426 are classified as binders." Source: https://services.healthtech.dtu.dk/service.php?NetMHCIIpan-3.2  (march 24th 2022)
     df.loc[df['exp_scores'] > 0.426,'exp_binders' ]=1
     df.loc[df['exp_scores'] <= 0.426,'exp_binders' ]=0
-#    df.loc[df['pred_scores'] > 0.426,'pred_binders' ]=1
-#    df.loc[df['pred_scores'] <= 0.426,'pred_binders' ]=0
 
-    # apply normalization techniques by Column 1
+    # apply normalization min max 
     df['pred_scores_min_max'] = (df['pred_scores'] - df['pred_scores'].min()) / (df['pred_scores'].max() - df['pred_scores'].min())
     print(df)
 
+    ################################################################################
+    # ROC dataframe
     fpr, tpr, thresholds = roc_curve(df['exp_binders'],df['pred_scores_min_max'])
     roc_df = pd.DataFrame({'recall':tpr,'specificity': 1-fpr})
-    print(roc_df)
-#    ax = roc_df.plot(x='specificity', y='recall', figsize=(4,4), legend=False)
-#    ax.set_ylim(0, 1)
-#    ax.set_xlim(1, 0)
-#    ax.plot((1, 0), (0, 1))
-#    ax.set_xlabel('specificity')
-#    ax.set_ylabel('recall')
-#    plt.tight_layout()
-#    plt.show()
+    #rint(roc_df)
 
     #print(df.corr().iloc[[0],[1]])
     #pcc1 = df.corr().iloc[[0],[1]].to_numpy()
@@ -144,7 +134,17 @@ def main():
     print("pandas.PCC_value: %f" % pcc1)
     print("pandas.AUC_value1: %f" % auc1)
     print("pandas.AUC_value2: %f" % auc2)
-#    print("Retornando de main()....")
+
+    ##################################################################################
+    # Plot ROC curve
+    ax = roc_df.plot(x='specificity', y='recall', figsize=(4,4), legend=False)
+    ax.set_ylim(0, 1)
+    ax.set_xlim(1, 0)
+    ax.plot((1, 0), (0, 1))
+    ax.set_xlabel('specificity')
+    ax.set_ylabel('recall')
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
     main()
