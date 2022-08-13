@@ -12,7 +12,7 @@
 !       auc:  Area Under Curve of Receiver Operating Characteristic (ROC) analysis.
 !       PRED_SCORES: Calculated data
  
-subroutine corr_nsga2(indv, LABEL, TRAIN_CHAR, HASHA, ARRAY_RR, EXP_SCORES, index_n, count_size, corr, auc, PRED_SCORES)
+subroutine corr_nsga2(indv,LABEL,TRAIN_CHAR,HASHA,ARRAY_RR,EXP_SCORES,index_n,count_size,corr,auc,PRED_SCORES,PRED_CORE_INDEX)
     !>
     !Initialization of matrices that depends on the sliding_window function
     !
@@ -30,9 +30,10 @@ subroutine corr_nsga2(indv, LABEL, TRAIN_CHAR, HASHA, ARRAY_RR, EXP_SCORES, inde
     real, intent(out) :: corr
     real, intent(out) :: auc
     real, intent(out), dimension(count_size) :: PRED_SCORES
+    integer, intent(out), dimension(count_size) :: PRED_CORE_INDEX
 
     integer i, aux_n, resol
-    integer j, k, tmp_index
+    integer j, k
     real tmp, mean_x, mean_y
     real cov, var_x, var_y
     real min, max, diff_max, diff_min
@@ -46,7 +47,7 @@ subroutine corr_nsga2(indv, LABEL, TRAIN_CHAR, HASHA, ARRAY_RR, EXP_SCORES, inde
     i = 0
     j = 0
     k = 0
-  
+
     DO i = 1, index_n
       DO j = 1, 9
         DO k = 1, 20
@@ -68,31 +69,42 @@ subroutine corr_nsga2(indv, LABEL, TRAIN_CHAR, HASHA, ARRAY_RR, EXP_SCORES, inde
     
     i = 1
     j = 1
-    k = 0
     aux_n = 1
-    tmp_index = 1
     
     DO WHILE (i < index_n)
+    ! cores from same peptide sequence 
         DO WHILE (HASHA(i) == HASHA(i+1))
-            IF (aux_n  == 1) tmp = PR_SC(i)
-            IF (tmp < PR_SC(i+1)) tmp = PR_SC(i+1)
+            IF (aux_n  == 1) THEN
+                tmp = PR_SC(i)
+                PRED_CORE_INDEX(j) = i
+            ENDIF
+            IF (tmp < PR_SC(i+1)) THEN
+                tmp = PR_SC(i+1)
+                PRED_CORE_INDEX(j) = i+1
+            ENDIF
             aux_n = aux_n + 1
             i = i + 1
-        END DO
+        END DO ! De acá tmp toma su valor
         IF (aux_n > 1) THEN
             PRED_SCORES(j) = tmp
             aux_n = 1
             j = j + 1
-            IF (i == index_n) GO TO 100
-            tmp = PR_SC(i+1)
-            i = i + 1
+            IF (i == index_n) GO TO 100 !  ?????
+            tmp = PR_SC(i+1) !???
+            i = i + 1   !????
         ENDIF
-        DO WHILE (HASHA(i) /= HASHA(i+1))
+    ! core from one peptide sequence
+        DO WHILE (HASHA(i) /= HASHA(i+1)) ! not equal .ne.
             PRED_SCORES(j) = PR_SC(i)
+            PRED_CORE_INDEX(j) = i
             j = j + 1
             i = i + 1
         END DO
-        IF (i == index_n) PRED_SCORES(j) = PR_SC(i)
+
+        IF (i == index_n) THEN ! ???????
+            PRED_SCORES(j) = PR_SC(i)
+            PRED_CORE_INDEX(j) = i
+        ENDIF
     END DO
     
     100 corr = 0.0  ! ??????? WTF
