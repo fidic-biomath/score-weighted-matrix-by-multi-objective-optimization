@@ -76,20 +76,15 @@ def corr_pcc(individual):
     # outputs:
     #   pcc:
     #   auc:
-    pcc, auc, pred_scores = corr1.corr_nsga2(np.array(individual), label, data_peptide_core_chars, hasha, array_r, exp_scores, index_n, dataset_size)
-    #pcc = np.person
-    #auc = np.roc.auc
+    pcc, auc, pred_scores, pred_core_index = corr1.corr_nsga2(np.array(individual), label, data_peptide_core_chars, hasha, array_r, exp_scores, index_n, dataset_size)
     return pcc, auc
 
 # Registro de operadores geneticos y funcion objetivo
-# cruce
-# tools.cxSimulatedBinaryBounded: 
+# cruce: tools.cxSimulatedBinaryBounded: 
 toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=BOUND_LOW, up=BOUND_UP, eta=20.0)
-# mutacion
-# tools.mutPolynomialBounded:
+# mutacion: tools.mutPolynomialBounded:
 toolbox.register("mutate", tools.mutPolynomialBounded, low=BOUND_LOW, up=BOUND_UP, eta=20.0, indpb=1.0/NDIM)
-# seleccion
-# tools.selNSGA2:
+# seleccion: tools.selNSGA2:
 toolbox.register("select", tools.selNSGA2)
 # fitness
 toolbox.register("evaluate", corr_pcc)
@@ -208,9 +203,6 @@ if __name__ == "__main__":
     #   label <class 'bytes'>:   columns labels of array_r
     #   index_n <class 'int'>:  number of 9-mer possible peptides
     array_r, label, index_n = corr2.store_nsga2(dataset_size, data_peptides, score_matrix)
-    #print( array_r )
-    #print( label )
-    #print( index_n )
 
     data_peptide_core_chars = np.array((index_n,9), dtype='U')
     hasha = np.array((index_n), dtype='U')
@@ -228,16 +220,6 @@ if __name__ == "__main__":
     #   hasha <class 'numpy.ndarray'>:  ????
     #   exp_scores <class 'numpy.ndarray'>:  experimental peptide binding scores 
     data_peptide_core_chars, hasha, exp_scores = corr3.store_nsga2(dataset_size, index_n, data_peptides, score_matrix)
-    #np.set_printoptions(threshold=sys.maxsize)
-    #print( type(data_peptide_core_chars) )
-    #print( data_peptide_core_chars.shape )
-    #print( data_peptide_core_chars )
-    #print( type(hasha) )
-    #print( hasha.shape )
-    #print( hasha )
-    #print( type(exp_scores) )
-    #print( exp_scores.shape )
-    #print( exp_scores )
 
 #########################################################################
     pop, log, pareto = main(num_generations, num_individuals, random_seed)
@@ -253,4 +235,3 @@ if __name__ == "__main__":
         res_fitness.write("\n")
     res_individuals.close()
     res_fitness.close()
-
