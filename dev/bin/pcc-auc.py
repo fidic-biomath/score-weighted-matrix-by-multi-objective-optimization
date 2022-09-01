@@ -95,13 +95,15 @@ def main():
     # Debugging
     #pdb.set_trace()
     pcc, auc, pred_scores, pred_core_index = corr1.corr_nsga2(individual, label, data_peptide_core_chars, hasha, array_r, exp_scores, index_n, dataset_size)
-
+    ########################################################################
+    # Print of:
+    # *peptide_number core_number core_sequence calculated_score exp_score
     k=1
     for i in pred_core_index:
         core_chars=[x.decode() for x in data_peptide_core_chars[i-1]] # Se usa i-1 por que de Fortran (corr1) viene el conteo de pred_core_index a partir de "1". 
         print(k, i, ''.join(core_chars), pred_scores[k-1], exp_scores[k-1])
         k+=1
-
+    ##########################################################################
     print("******************************************")
     print("*Performance indicators: PCC and ROC(AUC)*")
     print("******************************************")
@@ -109,8 +111,10 @@ def main():
     print("caom.AUC_value: %f" % auc)
 
     ###################################################
+    # Calculation of ROC and AUC via
+    # sklearn.metrics import roc_curve, accuracy_score, roc_auc_score
+
     my_array = np.array([exp_scores,pred_scores])
-    #print(my_array.T)
     df = pd.DataFrame(my_array.T, columns=['exp_scores', 'pred_scores'])
 
     #..."where the first column gives the peptide, the second column the log50k transformed binding affinity (i.e. 1 - log50k( aff nM)),
@@ -126,16 +130,33 @@ def main():
     df['pred_scores_min_max'] = (df['pred_scores'] - df['pred_scores'].min()) / (df['pred_scores'].max() - df['pred_scores'].min())
 
     ################################################################################
-    # ROC dataframe
+    # AUC method 1
+    print(df['exp_binders'].shape,df['pred_scores_min_max'].shape)
+#    print(df['exp_binders'])
+    print(df['pred_scores_min_max'])
     fpr, tpr, thresholds = roc_curve(df['exp_binders'],df['pred_scores_min_max'])
+#    fpr, tpr, thresholds = roc_curve(df['pred_scores_min_max'],df['exp_binders'])
+    print(thresholds)
+#    roc_thresholds_df=pd.DataFrame({'fpr':fpr,'tpr':tpr,'thresholds':thresholds})
+#    f = open("roc_curve.log", "w")
+#    f.write("#fpr, tpr, thresholds")
+#    roc_thresholds_df.to_csv("roc_curve.log", encoding='utf-8', index=False, sep=' ')
+#    f.close()
+    # ROC dataframe
     roc_df = pd.DataFrame({'recall':tpr,'specificity': 1-fpr})
-
-    pcc1 = df.corr().iloc[[0],[1]].values
     auc1 = np.sum(roc_df.recall[:-1] * np.diff(1 - roc_df.specificity))
+
+    # AUC method 2
     auc2 = roc_auc_score( df['exp_binders'],df['pred_scores_min_max'] )
+
+    # PCC
+    pcc1 = df.corr().iloc[[0],[1]].values
+
+    #######################################
+    # Print metric values
     print("pandas.PCC_value: %f" % pcc1)
     print("pandas.AUC_value1: %f" % auc1)
-    print("pandas.AUC_value2: %f" % auc2)
+    print("sklearn.AUC_value2: %f" % auc2)
 
     ##################################################################################
     # Plot ROC curve
