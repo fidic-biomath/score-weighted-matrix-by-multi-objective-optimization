@@ -16,6 +16,7 @@ global pcc
 global pred_scores
 
 def main():
+    np.set_printoptions(threshold=sys.maxsize)
     print("*")
     print("*********Setup Parameters**************")
 
@@ -44,7 +45,6 @@ def main():
     #   index_n <class 'int'>:  number of 9-mer possible peptides
     array_r, label, index_n = corr2.store_nsga2(dataset_size, data_peptides_filename, score_matrix_filename)
 
-    # CORR3
     # ??????
     # inputs:
     #   dataset_size:
@@ -98,7 +98,7 @@ def main():
 
     k=1
     for i in pred_core_index:
-        core_chars=[x.decode() for x in data_peptide_core_chars[i]]
+        core_chars=[x.decode() for x in data_peptide_core_chars[i-1]] # Se usa i-1 por que de Fortran (corr1) viene el conteo de pred_core_index a partir de "1". 
         print(k, i, ''.join(core_chars), pred_scores[k-1], exp_scores[k-1])
         k+=1
 

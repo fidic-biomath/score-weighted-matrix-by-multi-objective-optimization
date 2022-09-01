@@ -1,0 +1,5 @@
+NOTE: To compile *.f90 source files use:
+
+./build_modules.sh
+
+It makes that it can be load as python module.

@@ -1,4 +1,4 @@
-results/*
+dev/results/*
 **/*__pycache__/*
 *.env
 env_vars*
