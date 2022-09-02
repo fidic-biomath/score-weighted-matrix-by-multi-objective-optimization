@@ -5,11 +5,10 @@ import corr3
 import sys
 import numpy as np
 import pandas as pd
-import matplotlib
-from sklearn.metrics import roc_curve, accuracy_score, roc_auc_score
-import matplotlib
-matplotlib.use('Qt5Agg')
-import  matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, accuracy_score, roc_auc_score, f1_score
+#import matplotlib
+#matplotlib.use('Qt5Agg')
+#import  matplotlib.pyplot as plt
 
 global auc
 global pcc
@@ -107,8 +106,8 @@ def main():
     print("******************************************")
     print("*Performance indicators: PCC and ROC(AUC)*")
     print("******************************************")
-    print("caom.PCC_value: %f" % pcc)
-    print("caom.AUC_value: %f" % auc)
+    print(f"caom.PCC_value: {pcc}")
+    print(f"caom.AUC_value: {auc}")
 
     ###################################################
     # Calculation of ROC and AUC via
@@ -126,22 +125,34 @@ def main():
     df.loc[df['exp_scores'] > 0.426,'exp_binders' ]=1
     df.loc[df['exp_scores'] <= 0.426,'exp_binders' ]=0
 
-    # apply normalization min max 
+    # apply normalization min max in "pred_scores"
     df['pred_scores_min_max'] = (df['pred_scores'] - df['pred_scores'].min()) / (df['pred_scores'].max() - df['pred_scores'].min())
+    print("******************************************")
+    print(f"Pred Score: min= {df['pred_scores'].min()} max= {df['pred_scores'].max()}")
+    print("******************************************")
+    ################################################################################
+    # F1-Score
+    k=0.0
+    thresholds_list=[]
+    f1_score_list=[]
+    while k<=1.0:
+        df.loc[df['pred_scores_min_max'] > k,'pred_binders' ]=1
+        df.loc[df['pred_scores_min_max'] <= k,'pred_binders' ]=0
+        # F1-Score
+        f1_score_list.append( f1_score( df['exp_binders'], df['pred_binders']) )
+        thresholds_list.append(k)
+        k=k+0.01
+    #print('F1 score: %f' % f1)
+    f1_score_df=pd.DataFrame({'thresholds':thresholds_list,'f1_score':f1_score_list})
+    f1_score_df.to_csv("f1_score.log", encoding='utf-8', index=False, sep=' ')
 
     ################################################################################
     # AUC method 1
-    print(df['exp_binders'].shape,df['pred_scores_min_max'].shape)
-#    print(df['exp_binders'])
-    print(df['pred_scores_min_max'])
     fpr, tpr, thresholds = roc_curve(df['exp_binders'],df['pred_scores_min_max'])
-#    fpr, tpr, thresholds = roc_curve(df['pred_scores_min_max'],df['exp_binders'])
-    print(thresholds)
-#    roc_thresholds_df=pd.DataFrame({'fpr':fpr,'tpr':tpr,'thresholds':thresholds})
-#    f = open("roc_curve.log", "w")
-#    f.write("#fpr, tpr, thresholds")
-#    roc_thresholds_df.to_csv("roc_curve.log", encoding='utf-8', index=False, sep=' ')
-#    f.close()
+
+    roc_thresholds_df=pd.DataFrame({'fpr':fpr,'tpr':tpr,'thresholds':thresholds})
+    roc_thresholds_df.to_csv("roc_curve.log", encoding='utf-8', index=False, sep=' ')
+
     # ROC dataframe
     roc_df = pd.DataFrame({'recall':tpr,'specificity': 1-fpr})
     auc1 = np.sum(roc_df.recall[:-1] * np.diff(1 - roc_df.specificity))
@@ -154,9 +165,9 @@ def main():
 
     #######################################
     # Print metric values
-    print("pandas.PCC_value: %f" % pcc1)
-    print("pandas.AUC_value1: %f" % auc1)
-    print("sklearn.AUC_value2: %f" % auc2)
+    print(f"pandas.PCC_value: {pcc1}")
+    print(f"pandas.AUC_value1: {auc1}")
+    print(f"sklearn.AUC_value2: {auc2}")
 
     ##################################################################################
     # Plot ROC curve
