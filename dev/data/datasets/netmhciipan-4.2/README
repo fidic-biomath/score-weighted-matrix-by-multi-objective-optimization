@@ -1,0 +1,42 @@
+NetMHCIIpan - 4.2
+Pan-specific binding of peptides to MHC class II molecules of known sequence
+The NetMHCIIpan-4.2 server predicts peptide binding to HLA class II molecules using Artificial Neural Networks (ANNs). It is trained on an extensive dataset of over 600.000 measurements of Binding Affinity (BA) and Eluted Ligand mass spectrometry (EL), covering the three human MHC class II isotypes HLA-DR, HLA-DQ, HLA-DP, as well as mouse molecules (H-2).
+
+The network can predict for any HLA class II molecule of known sequence, which the user can specify as FASTA format, and predictions can be made for peptides of any length.
+
+The output of the model is a prediction score for the likelihood of a peptide to be naturally presented by an MHC-II receptor of choice. The output also include a %rank score, which normalizes the prediction score by comparing to predictions of a set of random peptides. Optionally, the model also outputs BA prediction and %rank scores.
+
+New in version 4.2: The method is trained on a extended set of HLA-DQ EL data compared to NetMHCIIpan-4.1.
+
+Refer to the instructions page for more details.
+
+The project is a collaboration between DTU-Bioinformatics, and LIAI.
+
+View the version history of this server
+
+UPDATE (September 27, 2023): Some missing pre-calculated files to estimate percentile ranks, along with the option to include BA predictions, have been added to the webserver and downloadable executables. If you downloaded NetMHCIIpan-4.2 before this date, please redownload the package (4.2c) to get the updated version.
+
+Supplementary material
+Training data
+NetMHCIIpan-4.2
+Here, you will find the data set used for training of NetMHCIIpan-4.2.
+
+NetMHCIIpan_train.tar.gz
+
+Download the file and untar the content using
+
+cat NetMHCIIpan_train.tar.gz | tar xvf -
+This will create the directory called NetMHCIIpan_train. In this directory you will find 12 files. 10 files (c00?_ba, c00?_el) with partitions with binding affinity (ba) with eluted ligand data (el). The format for each file is (here shown for an el file)
+
+AAAAAAAAAAAA 1 Saghar_9075 AGRAAAAAAAAA
+AAAAAAAAAAAA 1 Saghar_9090 AGRAAAAAAAAA
+AAAAAAAAAAAAA 1 Bergseng__9037_SWEIG AGRAAAAAAAAG
+AAAAAAAAAAAAA 1 Bergseng__9064_AMALA AGRAAAAAAAAG
+AAAAAAAAAAAAA 1 Bergseng__9089_BOB AGRAAAAAAAAG
+AAAAAAAAAAAAA 1 Saghar_9052 AGRAAAAAAAAG
+AAAAAAAAAAAAA 1 Saghar_9075 AGRAAAAAAAAG
+AAAAAAAAAAAAA 1 Saghar_9090 AGRAAAAAAAAG
+AAAAAAAAAAAAAA 1 Bergseng__9037_SWEIG AGRAAAAAAAGA
+AAAAAAAAAAAAAA 1 Bergseng__9064_AMALA AGRAAAAAAAGA
+where the different columns are peptide, target value, MHC_molecule/cell-line, and context. In cases where the 3rd columns is a cell-line ID, the MHC molecules expressed in the cell-line are listed in the allelelist.txt file.
+The allelelist.txt file contains the information about alleles expressed in each MA cell line data set, and pseudosequence.2016.fix the MHC pseudo sequenes for each MHC molecule.

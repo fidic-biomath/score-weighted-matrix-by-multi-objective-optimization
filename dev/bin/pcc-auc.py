@@ -148,7 +148,7 @@ def main():
     # AUC method 2
     auc2 = roc_auc_score( data_df['exp_binders'],data_df['pred_scores_max_min'] )
     # PCC
-    pcc1=float(data_df[['exp_scores','pred_scores_max_min']].corr().iloc[[0],[1]].values)
+    pcc1=data_df[['exp_scores','pred_scores_max_min']].corr().iat[0,1]
     #######################################
     # Print metric values
     print(f"pandas.PCC_value: {pcc1}")
